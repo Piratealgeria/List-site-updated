@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="#000000"/>
+  <text x="4" y="8" style="font: 4px monospace; fill: #00ff00;">1010101010</text>
+  <text x="4" y="12" style="font: 4px monospace; fill: #00ff00;">0101010101</text>
+  <text x="4" y="16" style="font: 4px monospace; fill: #00ff00;">1010101010</text>
+  <text x="4" y="20" style="font: 4px monospace; fill: #00ff00;">0101010101</text>
+  <text x="4" y="24" style="font: 4px monospace; fill: #00ff00;">1010101010</text>
+  <text x="4" y="28" style="font: 4px monospace; fill: #00ff00;">0101010101</text>
+</svg>

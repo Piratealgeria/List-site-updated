@@ -1,0 +1,20 @@
+blog-terminal/
+├── app/
+│   ├── page.tsx
+│   ├── layout.tsx
+│   └── posts/
+│       └── [id]/
+│           └── page.tsx
+├── components/
+│   ├── blog-terminal.tsx
+│   └── blog-post-card.tsx
+├── data/
+│   └── blogPosts.ts
+├── posts/
+│   ├── F01.md
+│   ├── F02.md
+│   ├── A01.md
+│   ├── A02.md
+│   └── ...
+└── types/
+    └── Post.ts

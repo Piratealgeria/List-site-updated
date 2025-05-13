@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <style>
+    .background {
+      fill: #3b82f6;
+    }
+    .glasses {
+      fill: #000000;
+    }
+    .pixel {
+      fill: #808080;
+    }
+    .cap {
+      fill: #000000;
+    }
+    .cap-text {
+      fill: #ffffff;
+      font: 4px sans-serif;
+      font-weight: bold;
+    }
+    @media (prefers-color-scheme: light) {
+      .background { fill: #3b82f6; }
+    }
+  </style>
+  <circle class="background" cx="16" cy="16" r="16"/>
+  <rect class="cap" x="6" y="4" width="20" height="6" rx="1"/>
+  <text x="8" y="8.5" class="cap-text">TOP NEP</text>
+  <rect class="glasses" x="6" y="12" width="20" height="4"/>
+  <rect class="pixel" x="8" y="12" width="2" height="2"/>
+  <rect class="pixel" x="12" y="12" width="2" height="2"/>
+  <rect class="pixel" x="18" y="12" width="2" height="2"/>
+  <rect class="pixel" x="22" y="12" width="2" height="2"/>
+</svg>

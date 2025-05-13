@@ -1,0 +1,362 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-mono: "Courier New", Courier, monospace;
+    --font-rubik: var(--font-rubik);
+  }
+
+  body {
+    font-family: var(--font-mono);
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: none;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Apply Rubik font to Arabic text only */
+  :lang(ar) {
+    font-family: var(--font-rubik);
+    direction: rtl;
+  }
+
+  body.dark {
+    background-color: #121212;
+    color: white;
+  }
+
+  body.light {
+    background-color: #f0f0f0;
+    color: black;
+  }
+
+  /* Improved typography for markdown content */
+  .prose {
+    @apply text-sm leading-relaxed;
+  }
+
+  .prose h1 {
+    @apply text-xl font-bold mt-6 mb-4;
+  }
+
+  .prose h2 {
+    @apply text-lg font-bold mt-5 mb-3;
+  }
+
+  .prose h3 {
+    @apply text-base font-bold mt-4 mb-2;
+  }
+
+  .prose p {
+    @apply my-3;
+  }
+
+  .prose ul,
+  .prose ol {
+    @apply my-3 pl-5;
+  }
+
+  .prose li {
+    @apply mb-1;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 pl-4 italic my-4;
+  }
+
+  .prose code {
+    @apply font-mono text-xs px-1 py-0.5 rounded;
+  }
+
+  .prose pre {
+    @apply my-4 p-3 rounded overflow-x-auto;
+  }
+
+  .prose img {
+    @apply max-w-full h-auto my-4 rounded-md;
+  }
+
+  .prose a {
+    @apply underline;
+  }
+
+  .prose table {
+    @apply w-full my-4 border-collapse;
+  }
+
+  .prose th,
+  .prose td {
+    @apply border p-2;
+  }
+
+  /* Arabic text in prose */
+  .prose :lang(ar) {
+    font-family: var(--font-rubik);
+    direction: rtl;
+  }
+
+  /* Dark mode specific styles */
+  .dark .prose {
+    @apply text-gray-300;
+  }
+
+  .dark .prose a {
+    @apply text-blue-400 hover:text-blue-300;
+  }
+
+  .dark .prose blockquote {
+    @apply border-gray-700 text-gray-400;
+  }
+
+  .dark .prose code {
+    @apply bg-gray-800 text-gray-300;
+  }
+
+  .dark .prose pre {
+    @apply bg-gray-900;
+  }
+
+  .dark .prose th,
+  .dark .prose td {
+    @apply border-gray-700;
+  }
+
+  /* Light mode specific styles */
+  .light .prose {
+    @apply text-gray-800;
+  }
+
+  .light .prose a {
+    @apply text-blue-600 hover:text-blue-800;
+  }
+
+  .light .prose blockquote {
+    @apply border-gray-300 text-gray-600;
+  }
+
+  .light .prose code {
+    @apply bg-gray-100 text-gray-800;
+  }
+
+  .light .prose pre {
+    @apply bg-gray-100;
+  }
+
+  .light .prose th,
+  .light .prose td {
+    @apply border-gray-300;
+  }
+}
+
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Line clamp for excerpts */
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Aspect ratio utilities */
+  .aspect-w-16 {
+    position: relative;
+    padding-bottom: calc(9 / 16 * 100%);
+  }
+
+  .aspect-h-9 {
+    position: relative;
+  }
+
+  .aspect-w-16 > iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+
+  .prose {
+    font-size: 0.875rem;
+  }
+
+  .prose h1 {
+    font-size: 1.5rem;
+  }
+
+  .prose h2 {
+    font-size: 1.25rem;
+  }
+
+  .prose h3 {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+/* Add these accessibility styles to the end of your globals.css file */
+
+/* High contrast mode */
+.high-contrast {
+  --contrast-multiplier: 1.5;
+  filter: contrast(var(--contrast-multiplier));
+}
+
+/* Low contrast mode */
+.low-contrast {
+  --contrast-multiplier: 0.8;
+  filter: contrast(var(--contrast-multiplier));
+}
+
+/* Reduced motion */
+.reduce-motion * {
+  transition-duration: 0.001ms !important;
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+}
+
+/* Dyslexic font */
+.dyslexic-font {
+  --font-mono: "OpenDyslexic", monospace;
+  font-family: "OpenDyslexic", monospace;
+}
+
+.dyslexic-font * {
+  font-family: "OpenDyslexic", monospace;
+  letter-spacing: 0.05em;
+  word-spacing: 0.1em;
+  line-height: 1.5;
+}
+
+/* Add OpenDyslexic font */
+@font-face {
+  font-family: "OpenDyslexic";
+  src: url("/fonts/OpenDyslexic-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "OpenDyslexic";
+  src: url("/fonts/OpenDyslexic-Bold.woff2") format("woff2");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* News ticker styles */
+.news-ticker {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.news-ticker-content {
+  display: inline-block;
+  animation: ticker 20s linear infinite;
+}
+
+.news-ticker:hover .news-ticker-content {
+  animation-play-state: paused;
+}
+
+@keyframes ticker {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* External link icon */
+a[href^="http"]:not([href*="mrcherif.party"]):after {
+  content: "";
+  width: 11px;
+  height: 11px;
+  margin-left: 4px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'%3E%3C/path%3E%3Cpolyline points='15 3 21 3 21 9'%3E%3C/polyline%3E%3Cline x1='10' y1='14' x2='21' y2='3'%3E%3C/line%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Don't show icon for image links */
+a[href^="http"] img {
+  margin-right: 0;
+}
+
+a[href^="http"] img + span:after {
+  display: none;
+}
+
+/* Ko-fi Widget Animations */
+.typing-animation p {
+  overflow: hidden;
+  white-space: nowrap;
+  margin: 0;
+  animation: typing 2s steps(30, end);
+}
+
+.typing-animation p:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typing-animation p:nth-child(2) {
+  animation-delay: 2s;
+  opacity: 0;
+  animation: typing 2s steps(30, end) 2s forwards;
+}
+
+.typing-animation p:nth-child(3) {
+  animation-delay: 4s;
+  opacity: 0;
+  animation: typing 2s steps(30, end) 4s forwards;
+}
+
+.typing-animation .blink {
+  animation: blink-caret 1s step-end infinite;
+  display: inline-block;
+}
+
+@keyframes typing {
+  from {
+    width: 0;
+    opacity: 1;
+  }
+  to {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+@keyframes blink-caret {
+  from,
+  to {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}

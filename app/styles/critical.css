@@ -1,0 +1,23 @@
+/* Critical CSS that should load first */
+:root {
+  --font-mono: "Courier New", Courier, monospace;
+}
+
+body {
+  font-family: var(--font-mono);
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: none;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+body.dark {
+  background-color: #121212;
+  color: white;
+}
+
+body.light {
+  background-color: #f0f0f0;
+  color: black;
+}

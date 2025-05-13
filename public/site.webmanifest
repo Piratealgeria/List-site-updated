@@ -1,0 +1,23 @@
+{
+  "name": "MrCherif Terminal Blog",
+  "short_name": "Terminal Blog",
+  "description": "A Bloomberg terminal-inspired tech blog with real-time market data",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#00ff00",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

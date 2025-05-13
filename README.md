@@ -1,30 +1,12 @@
-# Bloomberg-like Terminal
+# Terminal-Style Personal Blog
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+A personal blog with a Bloomberg terminal-inspired aesthetic.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/mr-cs-projects/v0-my-list-site-updated)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/y2YorUQjY84)
+## Deployment to Vercel
 
-## Overview
+This project is optimized for deployment on Vercel. Follow these steps to deploy:
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
-
-## Deployment
-
-Your project is live at:
-
-**[https://vercel.com/mr-cs-projects/v0-my-list-site-updated](https://vercel.com/mr-cs-projects/v0-my-list-site-updated)**
-
-## Build your app
-
-Continue building your app on:
-
-**[https://v0.dev/chat/projects/y2YorUQjY84](https://v0.dev/chat/projects/y2YorUQjY84)**
-
-## How It Works
-
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+1. Fork this repository to your GitHub account
+2. Create a new project on [Vercel](https://vercel.com)
+3. Connect your GitHub repository to Vercel
+4. Configure the following environment variables in your Vercel project settings (if needed):
