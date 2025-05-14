@@ -5,26 +5,42 @@ import Script from "next/script"
 import { blogData } from "../../../blogData"
 import type { Post } from "../../../types/post"
 
+// Import generateMetadata from utils with a different name to avoid naming conflicts
+import { generateMetadata as genMeta } from "../../../utils/metadata"
+
 // Generate metadata for each post
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params?: { id?: string } }): Promise<Metadata> {
+  // Add null check for params and params.id
+  if (!params || !params.id) {
+    return genMeta("Post Not Found", "The requested blog post could not be found.")
+  }
+
   const post = await getPostData(params.id)
 
   if (!post) {
-    return generateMetadata("Post Not Found", "The requested blog post could not be found.")
+    return genMeta("Post Not Found", "The requested blog post could not be found.")
   }
 
-  return generateMetadata(post.title, post.excerpt, post.image || "/og-image.jpg", `/posts/${params.id}`)
+  return genMeta(post.title, post.excerpt, post.image || "/og-image.jpg", `/posts/${params.id}`)
 }
 
 // Generate static paths for all posts
 export async function generateStaticParams() {
-  const posts = getAllPosts()
-  return posts.map((post) => ({
-    id: post.id,
-  }))
+  try {
+    const posts = getAllPosts()
+    return posts.map((post) => ({
+      id: post.id,
+    }))
+  } catch (error) {
+    console.error("Error generating static params:", error)
+    return []
+  }
 }
 
-function getPostFromBlogData(id: string): Post | null {
+function getPostFromBlogData(id?: string): Post | null {
+  // Add null check for id
+  if (!id) return null
+
   // Check featured posts
   const featuredPost = blogData.featured?.find((post) => post.id === id)
   if (featuredPost) {
@@ -68,11 +84,16 @@ function getPostFromBlogData(id: string): Post | null {
   return null
 }
 
-export default async function PostPage({ params }: { params: { id: string } }) {
+export default async function PostPage({ params }: { params?: { id?: string } }) {
+  // Add null check for params and params.id
+  if (!params || !params.id) {
+    return <div>Post not found: Missing ID parameter</div>
+  }
+
   const post = (await getPostData(params.id)) || getPostFromBlogData(params.id)
 
   if (!post) {
-    return <div>Post not found</div>
+    return <div>Post not found: {params.id}</div>
   }
 
   return (

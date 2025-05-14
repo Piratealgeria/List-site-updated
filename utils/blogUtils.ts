@@ -20,43 +20,63 @@ export function getAllPosts(): Post[] {
       markdownPosts = fileNames
         .filter((fileName) => fileName.endsWith(".md"))
         .map((fileName) => {
-          // Remove ".md" from file name to get id
-          const id = fileName.replace(/\.md$/, "")
+          try {
+            // Remove ".md" from file name to get id
+            const id = fileName.replace(/\.md$/, "")
 
-          // Read markdown file as string
-          const fullPath = path.join(postsDirectory, fileName)
-          const fileContents = fs.readFileSync(fullPath, "utf8")
+            // Read markdown file as string
+            const fullPath = path.join(postsDirectory, fileName)
+            const fileContents = fs.readFileSync(fullPath, "utf8")
 
-          // Use gray-matter to parse the post metadata section
-          const matterResult = matter(fileContents)
+            // Use gray-matter to parse the post metadata section
+            const matterResult = matter(fileContents)
 
-          // Check if there's a video URL in the frontmatter
-          const videoUrl = matterResult.data.videoUrl || null
-          let image = matterResult.data.image || null
+            // Check if there's a video URL in the frontmatter
+            const videoUrl = matterResult.data.videoUrl || null
+            let image = matterResult.data.image || null
 
-          // If there's a video but no image, use the video thumbnail
-          if (videoUrl && !image) {
-            const videoData = extractVideoId(videoUrl)
-            if (videoData) {
-              image = getVideoThumbnail(videoData)
+            // If there's a video but no image, use the video thumbnail
+            if (videoUrl && !image) {
+              const videoData = extractVideoId(videoUrl)
+              if (videoData) {
+                image = getVideoThumbnail(videoData)
+              }
             }
-          }
 
-          // Combine the data with the id
-          return {
-            id,
-            title: matterResult.data.title || "Untitled Post",
-            excerpt: matterResult.data.excerpt || "No excerpt available",
-            author: matterResult.data.author || "Anonymous",
-            date: matterResult.data.date || new Date().toISOString(),
-            category: matterResult.data.category || "Uncategorized",
-            tags: matterResult.data.tags || [],
-            content: matterResult.content,
-            image: image,
-            videoUrl: videoUrl,
-            readTime: calculateReadTime(matterResult.content),
-            likes: Math.floor(Math.random() * 100), // Add random likes for demo
-            comments: Math.floor(Math.random() * 20), // Add random comments for demo
+            // Combine the data with the id
+            return {
+              id,
+              title: matterResult.data.title || "Untitled Post",
+              excerpt: matterResult.data.excerpt || "No excerpt available",
+              author: matterResult.data.author || "Anonymous",
+              date: matterResult.data.date || new Date().toISOString(),
+              category: matterResult.data.category || "Uncategorized",
+              tags: matterResult.data.tags || [],
+              content: matterResult.content,
+              image: image,
+              videoUrl: videoUrl,
+              readTime: calculateReadTime(matterResult.content),
+              likes: Math.floor(Math.random() * 100), // Add random likes for demo
+              comments: Math.floor(Math.random() * 20), // Add random comments for demo
+            }
+          } catch (error) {
+            console.error(`Error processing file ${fileName}:`, error)
+            // Return a minimal valid post object to prevent build failures
+            return {
+              id: fileName.replace(/\.md$/, ""),
+              title: "Error Loading Post",
+              excerpt: "There was an error loading this post.",
+              author: "System",
+              date: new Date().toISOString(),
+              category: "Error",
+              tags: ["error"],
+              content: "There was an error loading this post content.",
+              image: null,
+              videoUrl: null,
+              readTime: "1 min read",
+              likes: 0,
+              comments: 0,
+            }
           }
         })
     }
@@ -69,52 +89,60 @@ export function getAllPosts(): Post[] {
       // Process featured posts
       if (blogData.featured && Array.isArray(blogData.featured)) {
         blogData.featured.forEach((post) => {
-          dataSourcePosts.push({
-            ...post,
-            content: post.excerpt || "No content available",
-            readTime: post.readTime || "5 min read",
-            likes: post.likes || Math.floor(Math.random() * 100),
-            comments: post.comments || Math.floor(Math.random() * 20),
-          })
+          if (post && post.id) {
+            dataSourcePosts.push({
+              ...post,
+              content: post.excerpt || "No content available",
+              readTime: post.readTime || "5 min read",
+              likes: post.likes || Math.floor(Math.random() * 100),
+              comments: post.comments || Math.floor(Math.random() * 20),
+            })
+          }
         })
       }
 
       // Process americas posts
       if (blogData.americas && Array.isArray(blogData.americas)) {
         blogData.americas.forEach((post) => {
-          dataSourcePosts.push({
-            ...post,
-            content: post.excerpt || "No content available",
-            readTime: post.readTime || "5 min read",
-            likes: post.likes || Math.floor(Math.random() * 100),
-            comments: Math.floor(Math.random() * 20),
-          })
+          if (post && post.id) {
+            dataSourcePosts.push({
+              ...post,
+              content: post.excerpt || "No content available",
+              readTime: post.readTime || "5 min read",
+              likes: post.likes || Math.floor(Math.random() * 100),
+              comments: Math.floor(Math.random() * 20),
+            })
+          }
         })
       }
 
       // Process emea posts
       if (blogData.emea && Array.isArray(blogData.emea)) {
         blogData.emea.forEach((post) => {
-          dataSourcePosts.push({
-            ...post,
-            content: post.excerpt || "No content available",
-            readTime: post.readTime || "5 min read",
-            likes: post.likes || Math.floor(Math.random() * 100),
-            comments: Math.floor(Math.random() * 20),
-          })
+          if (post && post.id) {
+            dataSourcePosts.push({
+              ...post,
+              content: post.excerpt || "No content available",
+              readTime: post.readTime || "5 min read",
+              likes: post.likes || Math.floor(Math.random() * 100),
+              comments: Math.floor(Math.random() * 20),
+            })
+          }
         })
       }
 
       // Process asiaPacific posts
       if (blogData.asiaPacific && Array.isArray(blogData.asiaPacific)) {
         blogData.asiaPacific.forEach((post) => {
-          dataSourcePosts.push({
-            ...post,
-            content: post.excerpt || "No content available",
-            readTime: post.readTime || "5 min read",
-            likes: post.likes || Math.floor(Math.random() * 100),
-            comments: Math.floor(Math.random() * 20),
-          })
+          if (post && post.id) {
+            dataSourcePosts.push({
+              ...post,
+              content: post.excerpt || "No content available",
+              readTime: post.readTime || "5 min read",
+              likes: post.likes || Math.floor(Math.random() * 100),
+              comments: Math.floor(Math.random() * 20),
+            })
+          }
         })
       }
     }
@@ -133,7 +161,10 @@ export function getAllPosts(): Post[] {
   }
 }
 
-export function getPostData(id: string): Post | null {
+export function getPostData(id?: string): Post | null {
+  // Add null check for id
+  if (!id) return null
+
   try {
     const postsDirectory = path.join(process.cwd(), "posts")
     const fullPath = path.join(postsDirectory, `${id}.md`)
@@ -156,11 +187,11 @@ export function getPostData(id: string): Post | null {
 
       return {
         id,
-        title: matterResult.data.title,
-        excerpt: matterResult.data.excerpt,
-        author: matterResult.data.author,
-        date: matterResult.data.date,
-        category: matterResult.data.category,
+        title: matterResult.data.title || "Untitled Post",
+        excerpt: matterResult.data.excerpt || "No excerpt available",
+        author: matterResult.data.author || "Anonymous",
+        date: matterResult.data.date || new Date().toISOString(),
+        category: matterResult.data.category || "Uncategorized",
         tags: matterResult.data.tags || [],
         content: matterResult.content,
         image: image,
@@ -176,46 +207,66 @@ export function getPostData(id: string): Post | null {
 }
 
 export function calculateReadTime(content: string): string {
-  const wordsPerMinute = 200
-  const wordCount = content.split(/\s+/g).length
-  const readTime = Math.ceil(wordCount / wordsPerMinute)
-  return `${readTime} min read`
+  try {
+    const wordsPerMinute = 200
+    const wordCount = content.split(/\s+/g).length
+    const readTime = Math.ceil(wordCount / wordsPerMinute)
+    return `${readTime} min read`
+  } catch (error) {
+    console.error("Error calculating read time:", error)
+    return "1 min read"
+  }
 }
 
 export function getAllCategories(): string[] {
-  const allPosts = getAllPosts()
-  const categories = new Set<string>()
+  try {
+    const allPosts = getAllPosts()
+    const categories = new Set<string>()
 
-  allPosts.forEach((post) => {
-    if (post.category) {
-      categories.add(post.category)
-    }
-  })
+    allPosts.forEach((post) => {
+      if (post.category) {
+        categories.add(post.category)
+      }
+    })
 
-  return Array.from(categories)
-}
-
-export function getPostsByCategory(category: string): Post[] {
-  const allPosts = getAllPosts()
-
-  // If category is "all" or empty, return all posts
-  if (!category || category.toLowerCase() === "all") {
-    return allPosts
+    return Array.from(categories)
+  } catch (error) {
+    console.error("Error getting all categories:", error)
+    return []
   }
-
-  return allPosts.filter((post) => post.category.toLowerCase() === category.toLowerCase())
 }
 
-export function searchPosts(query: string): Post[] {
-  if (!query) return getAllPosts()
+export function getPostsByCategory(category?: string): Post[] {
+  try {
+    const allPosts = getAllPosts()
 
-  const allPosts = getAllPosts()
-  const lowercaseQuery = query.toLowerCase()
+    // If category is "all" or empty, return all posts
+    if (!category || category.toLowerCase() === "all") {
+      return allPosts
+    }
 
-  return allPosts.filter(
-    (post) =>
-      post.title.toLowerCase().includes(lowercaseQuery) ||
-      post.content.toLowerCase().includes(lowercaseQuery) ||
-      post.tags.some((tag) => tag.toLowerCase().includes(lowercaseQuery)),
-  )
+    return allPosts.filter((post) => post.category.toLowerCase() === category.toLowerCase())
+  } catch (error) {
+    console.error(`Error getting posts by category ${category}:`, error)
+    return []
+  }
+}
+
+export function searchPosts(query?: string): Post[] {
+  try {
+    if (!query) return getAllPosts()
+
+    const allPosts = getAllPosts()
+    const lowercaseQuery = query.toLowerCase()
+
+    return allPosts.filter(
+      (post) =>
+        post.title.toLowerCase().includes(lowercaseQuery) ||
+        post.content.toLowerCase().includes(lowercaseQuery) ||
+        post.tags.some((tag) => tag.toLowerCase().includes(lowercaseQuery)),
+    )
+  } catch (error) {
+    console.error(`Error searching posts for query ${query}:`, error)
+    return []
+  }
 }
