@@ -18,7 +18,7 @@ This site serves as an archive for my YouTube and Odysee content, as well as a p
 
 - **Video Archives**: Links and information about all my videos
 - **Music Lists**: Tracks used in my mixes and compilations
-- **Anime References**: Shows and characters featured in my content
+- **Anime References**: Shows and characters featured in my content.
 - **Resource Collections**: Tools, assets, and resources I use
 
 ## My Channels
