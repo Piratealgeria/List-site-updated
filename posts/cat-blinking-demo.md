@@ -13,7 +13,7 @@ animatedAsciiArt: [
 ]
 ---
 
-# Cat Blinking ASCII Art Animation
+# Cat Blinking ASCII Art Animation.
 
 This post features a simple but adorable ASCII art animation of a cat blinking.
 
