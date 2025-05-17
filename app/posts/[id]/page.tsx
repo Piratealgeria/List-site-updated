@@ -90,7 +90,7 @@ export default async function PostPage({ params }: { params?: { id?: string } })
     return <div>Post not found: Missing ID parameter</div>
   }
 
-  const post = (await getPostData(params.id)) || getPostFromBlogData(params.id)
+  const post = await getPostData(params.id) || getPostFromBlogData(params.id)
 
   if (!post) {
     return <div>Post not found: {params.id}</div>

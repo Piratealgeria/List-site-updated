@@ -84,6 +84,18 @@ export function getAllPosts(): Post[] {
   }
 }
 
+export async function getPostData(id?: string): Promise<Post | null> {
+  try {
+    if (!id) return null
+
+    const allPosts = getAllPosts()
+    return allPosts.find(post => post.id === id) || null
+  } catch (error) {
+    console.error(`Error getting post data for ${id}:`, error)
+    return null
+  }
+}
+
 export function calculateReadTime(content: string): string {
   try {
     const wordsPerMinute = 200
