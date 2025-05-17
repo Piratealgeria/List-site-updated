@@ -84,7 +84,7 @@ export default function NewsTicker({ items, speed = 50, className = "", isDarkMo
         style={{ transform: `translateX(${position}px)` }}
       >
         {items.map((item, index) => (
-          <span key={item.id} className="mr-8">
+          <span key={`${item.id}-${index}`} className="mr-8">
             {item.url ? (
               <Link href={item.url} className={`hover:underline ${isDarkMode ? "text-yellow-400" : "text-blue-600"}`}>
                 {item.text}

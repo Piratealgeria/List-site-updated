@@ -57,7 +57,7 @@ export default function RootLayout({
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              if ('serviceWorker' in navigator) {
+              if (typeof window !== 'undefined' && 'serviceWorker' in navigator && window.location.hostname !== 'stackblitz.com') {
                 window.addEventListener('load', async function() {
                   try {
                     const registration = await navigator.serviceWorker.register('/service-worker.js', {
