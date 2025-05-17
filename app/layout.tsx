@@ -2,7 +2,6 @@ import type React from "react"
 import "./globals.css"
 import { Rubik } from "next/font/google"
 import { Analytics } from "../utils/analytics"
-import Script from "next/script"
 import AccessibilitySettings from "../components/accessibility-settings"
 import NewsTicker from "../components/news-ticker"
 import { newsItems } from "../config/news"
@@ -50,46 +49,6 @@ export default function RootLayout({
         </div>
 
         <AccessibilitySettings isDarkMode={isDarkMode} />
-
-        {/* Register Service Worker with improved caching */}
-        <Script
-          id="register-sw"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              if (typeof window !== 'undefined' && 'serviceWorker' in navigator && window.location.hostname !== 'stackblitz.com') {
-                window.addEventListener('load', async function() {
-                  try {
-                    const registration = await navigator.serviceWorker.register('/service-worker.js', {
-                      scope: '/'
-                    });
-                    
-                    // Check for updates every hour
-                    setInterval(() => {
-                      registration.update();
-                    }, 60 * 60 * 1000);
-
-                    // Handle updates
-                    registration.addEventListener('updatefound', () => {
-                      const newWorker = registration.installing;
-                      newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                          // New content is available, show refresh prompt
-                          if (confirm('New content is available! Click OK to refresh.')) {
-                            window.location.reload();
-                          }
-                        }
-                      });
-                    });
-
-                  } catch (error) {
-                    console.error('ServiceWorker registration failed:', error);
-                  }
-                });
-              }
-            `,
-          }}
-        />
 
         <Analytics />
         <VercelAnalytics />
