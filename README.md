@@ -1,12 +1,20 @@
-# Terminal-Style Personal Blog
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-A personal blog with a Bloomberg terminal-inspired aesthetic.
+# Run and deploy your AI Studio app
 
-## Deployment to Vercel
+This contains everything you need to run your app locally.
 
-This project is optimized for deployment on Vercel. Follow these steps to deploy:
+View your app in AI Studio: https://ai.studio/apps/248ca0fb-75fc-4727-8c6d-c15f58ee3033
 
-1. Fork this repository to your GitHub account
-2. Create a new project on [Vercel](https://vercel.com)
-3. Connect your GitHub repository to Vercel
-4. Configure the following environment variables in your Vercel project settings (if needed):
+## Run Locally
+
+**Prerequisites:**  Node.js
+
+
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
