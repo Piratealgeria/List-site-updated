@@ -90,8 +90,5 @@
   { "id": "GWS96", "numericId": 96, "title": "GWS96", "file": "GWS96.md", "type": "md" },
   { "id": "GWS97", "numericId": 97, "title": "GWS97", "file": "GWS97.md", "type": "md" },
   { "id": "GWS98", "numericId": 98, "title": "GWS98", "file": "GWS98.md", "type": "md" },
-  { "id": "GWS99", "numericId": 99, "title": "GWS99", "file": "GWS99.md", "type": "md" },
-  { "id": "post1", "numericId": 1, "title": "post1", "file": "post1.md", "type": "md" },
-  { "id": "post2", "numericId": 2, "title": "post2", "file": "post2.md", "type": "md" },
-  { "id": "post3", "numericId": 3, "title": "post3", "file": "post3.md", "type": "md" }
+  { "id": "GWS99", "numericId": 99, "title": "GWS99", "file": "GWS99.md", "type": "md" }
 ]
