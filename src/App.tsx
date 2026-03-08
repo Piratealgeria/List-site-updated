@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import postsData from './posts-manifest.json';
 
 // Utility for tailwind classes
 function cn(...inputs: ClassValue[]) {
@@ -223,16 +224,10 @@ const Home = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    fetch('/posts-manifest.json')
-      .then(res => res.json())
-      .then((data: PostMetadata[]) => {
-        setPosts(data.sort((a, b) => (b.numericId || 0) - (a.numericId || 0)));
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error loading manifest:', err);
-        setLoading(false);
-      });
+    // Cast the imported JSON to the correct type
+    const data = postsData as unknown as PostMetadata[];
+    setPosts(data.sort((a, b) => (b.numericId || 0) - (a.numericId || 0)));
+    setLoading(false);
   }, []);
 
   // Optimized thumbnail enhancement: only for posts on current page
@@ -492,18 +487,16 @@ const PostDetail = () => {
   }, []);
 
   useEffect(() => {
-    fetch('/posts-manifest.json')
-      .then(res => res.json())
-      .then(async (data: PostMetadata[]) => {
-        const sorted = data.sort((a, b) => (b.numericId || 0) - (a.numericId || 0));
-        setAllPosts(sorted);
-        
-        const found = sorted.find(p => p.id === id);
-        if (found) {
-          setPost(found);
-          const contentRes = await fetch(`/posts/${found.file}`);
-          let text = await contentRes.text();
-          
+    const data = postsData as unknown as PostMetadata[];
+    const sorted = data.sort((a, b) => (b.numericId || 0) - (a.numericId || 0));
+    setAllPosts(sorted);
+    
+    const found = sorted.find(p => p.id === id);
+    if (found) {
+      setPost(found);
+      fetch(`/posts/${found.file}`)
+        .then(res => res.text())
+        .then(text => {
           // Simple frontmatter strip
           if (text.startsWith('---')) {
             const parts = text.split('---');
@@ -511,16 +504,17 @@ const PostDetail = () => {
               text = parts.slice(2).join('---').trim();
             }
           }
-          
           setContent(text);
           window.scrollTo(0, 0);
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error loading post:', err);
-        setLoading(false);
-      });
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Error loading post content:', err);
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
   }, [id]);
 
   const currentIndex = allPosts.findIndex(p => p.id === id);
