@@ -3,24 +3,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
+  Share2, 
   ArrowLeft, 
   ArrowRight,
   Copy, 
   Check, 
+  ExternalLink, 
+  Menu, 
   X,
   ChevronRight,
+  Play,
   Search
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import postsData from './posts-manifest.json';
 
 // Utility for tailwind classes
 function cn(...inputs: ClassValue[]) {
@@ -35,6 +38,7 @@ interface PostMetadata {
   file: string;
   type: 'md' | 'html';
   thumbnail?: string;
+  videoUrl?: string | null;
   excerpt?: string;
   tags?: string[];
 }
@@ -57,7 +61,6 @@ const CopyLinkButton = ({ url }: { url: string }) => {
   return (
     <button
       onClick={handleCopy}
-      aria-label="Copy link"
       className="p-2 md:p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all flex items-center gap-2 group"
     >
       {copied ? <Check className="w-4 h-4 md:w-5 md:h-5 text-emerald-400" /> : <Copy className="w-4 h-4 md:w-5 md:h-5 text-white" />}
@@ -105,13 +108,11 @@ const ClickToCopy = ({ text, children, className }: { text: string, children: Re
 };
 
 const FormattedLine = ({ children }: { children: React.ReactNode }) => {
-  const getText = (node: React.ReactNode): string => {
+  const getText = (node: any): string => {
     if (typeof node === 'string') return node;
     if (typeof node === 'number') return String(node);
     if (Array.isArray(node)) return node.map(getText).join('');
-    if (React.isValidElement(node) && node.props.children) {
-      return getText(node.props.children);
-    }
+    if (node?.props?.children) return getText(node.props.children);
     return '';
   };
 
@@ -165,6 +166,33 @@ const CopyableListItem = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+const VideoEmbed = ({ url }: { url: string }) => {
+  const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+  const isOdysee = url.includes('odysee.com');
+
+  let embedUrl = '';
+  if (isYoutube) {
+    const id = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
+    embedUrl = `https://www.youtube.com/embed/${id}`;
+  } else if (isOdysee) {
+    // Odysee embed format: https://odysee.com/$/embed/name/id
+    embedUrl = url.replace('odysee.com/', 'odysee.com/$/embed/');
+  }
+
+  if (!embedUrl) return <a href={url} className="text-emerald-400 underline">{url}</a>;
+
+  return (
+    <div className="relative aspect-video w-full rounded-2xl overflow-hidden my-8 shadow-2xl border border-white/10">
+      <iframe
+        src={embedUrl}
+        className="absolute inset-0 w-full h-full"
+        allowFullScreen
+        title="Video player"
+      />
+    </div>
+  );
+};
+
 // --- Pages ---
 
 const PostCard = ({ post, index }: { post: PostMetadata; index: number }) => {
@@ -190,6 +218,7 @@ const PostCard = ({ post, index }: { post: PostMetadata; index: number }) => {
             src={post.thumbnail}
             alt={post.title}
             onLoad={() => setIsLoaded(true)}
+            onError={() => setIsLoaded(true)}
             className={cn(
               "absolute inset-0 w-full h-full object-cover transition-all duration-700",
               isLoaded ? "opacity-60 group-hover:opacity-100 scale-100" : "opacity-0 scale-110"
@@ -224,67 +253,39 @@ const Home = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    // Cast the imported JSON to the correct type
-    const data = postsData as unknown as PostMetadata[];
-    setPosts(data.sort((a, b) => (b.numericId || 0) - (a.numericId || 0)));
-    setLoading(false);
+    fetch('/api/posts')
+      .then(res => res.json())
+      .then((data: PostMetadata[]) => {
+        setPosts(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error loading posts:', err);
+        setLoading(false);
+      });
   }, []);
 
-  // Optimized thumbnail enhancement: only for posts on current page
   useEffect(() => {
-    if (posts.length === 0) return;
-
-    const enhanceThumbnails = async () => {
-      const start = (currentPage - 1) * POSTS_PER_PAGE;
-      const end = currentPage * POSTS_PER_PAGE;
-      const visiblePosts = posts.slice(start, end);
-
-      const updatedPosts = [...posts];
-      let changed = false;
-
-      await Promise.all(visiblePosts.map(async (post, index) => {
-        const globalIndex = start + index;
-        if (post.thumbnail) return;
-
-        try {
-          const contentRes = await fetch(`/posts/${post.file}`);
-          const content = await contentRes.text();
-          
-          let thumbnail = `https://picsum.photos/seed/${post.id}/800/450`;
-          
-          // Try to find video
-          const ytMatch = content.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
-          if (ytMatch) {
-            thumbnail = `https://img.youtube.com/vi/${ytMatch[1]}/maxresdefault.jpg`;
-          } else {
-            // Try to find image
-            const imgMatch = content.match(/!\[.*?\]\((.*?)\)/) || content.match(/<img.*?src="(.*?)"/);
-            if (imgMatch) {
-              thumbnail = imgMatch[1];
-            }
-          }
-
-          updatedPosts[globalIndex] = { ...post, thumbnail };
-          changed = true;
-        } catch (e) {
-          console.error('Error fetching post content for thumbnail:', e);
-        }
-      }));
-
-      if (changed) {
-        setPosts(updatedPosts);
+    const title = 'Viking Algeria | YouTube Channel Notes';
+    const description = 'Personal notes and resources for the Viking Algeria YouTube channel.';
+    
+    document.title = title;
+    
+    const updateMeta = (name: string, content: string, attr: string = 'name') => {
+      let el = document.querySelector(`meta[${attr}="${name}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, name);
+        document.head.appendChild(el);
       }
+      el.setAttribute('content', content);
     };
 
-    enhanceThumbnails();
-  }, [currentPage, posts]);
-
-  useEffect(() => {
-    document.title = 'Viking Algeria | YouTube Channel Notes';
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute('content', 'Personal notes and resources for the Viking Algeria YouTube channel.');
-    }
+    updateMeta('description', description);
+    updateMeta('og:title', title, 'property');
+    updateMeta('og:description', description, 'property');
+    updateMeta('twitter:title', title, 'property');
+    updateMeta('twitter:description', description, 'property');
   }, []);
 
   // Reset to first page when searching
@@ -357,7 +358,6 @@ const Home = () => {
                       setIsSearchOpen(false);
                       setSearchQuery('');
                     }}
-                    aria-label="Close search"
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors"
                   >
                     <X className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -366,7 +366,6 @@ const Home = () => {
               ) : (
                 <button 
                   onClick={() => setIsSearchOpen(true)}
-                  aria-label="Search posts"
                   className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-emerald-500/30 transition-all group"
                 >
                   <Search className="w-4 h-4 md:w-5 md:h-5 text-white/40 group-hover:text-emerald-500 transition-colors" />
@@ -487,16 +486,17 @@ const PostDetail = () => {
   }, []);
 
   useEffect(() => {
-    const data = postsData as unknown as PostMetadata[];
-    const sorted = data.sort((a, b) => (b.numericId || 0) - (a.numericId || 0));
-    setAllPosts(sorted);
-    
-    const found = sorted.find(p => p.id === id);
-    if (found) {
-      setPost(found);
-      fetch(`/posts/${found.file}`)
-        .then(res => res.text())
-        .then(text => {
+    fetch('/api/posts')
+      .then(res => res.json())
+      .then(async (data: PostMetadata[]) => {
+        setAllPosts(data);
+        
+        const found = data.find(p => p.id === id);
+        if (found) {
+          setPost(found);
+          const contentRes = await fetch(`/posts/${found.file}`);
+          let text = await contentRes.text();
+          
           // Simple frontmatter strip
           if (text.startsWith('---')) {
             const parts = text.split('---');
@@ -504,17 +504,16 @@ const PostDetail = () => {
               text = parts.slice(2).join('---').trim();
             }
           }
+          
           setContent(text);
           window.scrollTo(0, 0);
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error('Error loading post content:', err);
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
-    }
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error loading post:', err);
+        setLoading(false);
+      });
   }, [id]);
 
   const currentIndex = allPosts.findIndex(p => p.id === id);
@@ -556,7 +555,6 @@ const PostDetail = () => {
       <header className="fixed top-0 left-0 right-0 z-50 p-4 md:p-8 flex justify-between items-center pointer-events-none">
         <button 
           onClick={() => navigate('/')}
-          aria-label="Go back"
           className="p-2.5 md:p-3 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 hover:bg-white/10 transition-all pointer-events-auto shadow-lg"
         >
           <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
@@ -571,6 +569,7 @@ const PostDetail = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
+          {post.videoUrl && <VideoEmbed url={post.videoUrl} />}
           {post.type === 'md' ? (
             <div className="prose prose-invert prose-emerald max-w-none break-words">
               <ReactMarkdown
@@ -578,6 +577,10 @@ const PostDetail = () => {
                 components={{
                   li: ({ children }) => <CopyableListItem>{children}</CopyableListItem>,
                   a: ({ href, children }) => {
+                    const isVideo = href && (href.includes('youtube.com') || href.includes('youtu.be') || href.includes('odysee.com'));
+                    if (isVideo) {
+                      return <VideoEmbed url={href} />;
+                    }
                     return <a href={href} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4 break-all">{children}</a>;
                   },
                   img: ({ src, alt }) => (
