@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import postsData from 'virtual:posts';
 
 // Utility for tailwind classes
 function cn(...inputs: ClassValue[]) {
@@ -42,6 +43,8 @@ interface PostMetadata {
   excerpt?: string;
   tags?: string[];
 }
+
+const postsDataSorted = (postsData as PostMetadata[]).slice().sort((a, b) => (b.numericId || 0) - (a.numericId || 0));
 
 // --- Components ---
 
@@ -253,16 +256,8 @@ const Home = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    fetch('/api/posts')
-      .then(res => res.json())
-      .then((data: PostMetadata[]) => {
-        setPosts(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error loading posts:', err);
-        setLoading(false);
-      });
+    setPosts(postsDataSorted);
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -486,34 +481,31 @@ const PostDetail = () => {
   }, []);
 
   useEffect(() => {
-    fetch('/api/posts')
-      .then(res => res.json())
-      .then(async (data: PostMetadata[]) => {
-        setAllPosts(data);
-        
-        const found = data.find(p => p.id === id);
-        if (found) {
-          setPost(found);
-          const contentRes = await fetch(`/posts/${found.file}`);
-          let text = await contentRes.text();
-          
-          // Simple frontmatter strip
+    setAllPosts(postsDataSorted);
+    
+    const found = postsDataSorted.find(p => p.id === id);
+    if (found) {
+      setPost(found);
+      fetch(`/posts/${found.file}`)
+        .then(res => res.text())
+        .then(text => {
           if (text.startsWith('---')) {
             const parts = text.split('---');
             if (parts.length >= 3) {
               text = parts.slice(2).join('---').trim();
             }
           }
-          
           setContent(text);
           window.scrollTo(0, 0);
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error loading post:', err);
-        setLoading(false);
-      });
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Error loading post content:', err);
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
   }, [id]);
 
   const currentIndex = allPosts.findIndex(p => p.id === id);
