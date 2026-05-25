@@ -26,6 +26,8 @@ export const MusicPlayer = () => {
         const next = !prev;
         if (next && !isPlaying) {
           setIsPlaying(true);
+        } else if (!next) {
+          setIsPlaying(false);
         }
         return next;
       });
@@ -196,7 +198,10 @@ export const MusicPlayer = () => {
                   </button>
                   
                   <button
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => {
+                      setIsOpen(false);
+                      setIsPlaying(false);
+                    }}
                     className="w-8 h-8 flex items-center justify-center text-white/40 hover:text-white transition-colors shrink-0 ml-1 md:ml-2"
                     aria-label="Close music player"
                   >

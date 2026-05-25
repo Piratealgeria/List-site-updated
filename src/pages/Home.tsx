@@ -97,8 +97,9 @@ export const Home = () => {
       <div className="absolute inset-0 bg-grid-pattern pointer-events-none z-0 opacity-40 mix-blend-screen" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none z-0" />
       
-      <div className="flex-grow px-6 md:px-12 lg:px-20 py-12 md:py-20 relative z-10">
-        <header className="mb-20 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-8">
+      <div className="flex-grow relative z-10 w-full flex flex-col items-center">
+        <div className="max-w-7xl mx-auto w-full px-4 md:px-8 py-12 md:py-20 flex-1">
+          <header className="mb-16 md:mb-20 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-8">
           <div className="w-full md:w-auto text-center md:text-left mx-auto md:mx-0 flex flex-col items-center md:items-start">
             <motion.h1 
               initial={{ y: 20, opacity: 0 }}
@@ -107,7 +108,7 @@ export const Home = () => {
               onClick={() => window.location.reload()}
               className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-display font-bold uppercase tracking-tighter leading-[0.85] mb-6 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap"
             >
-              Viking<br/><span className="text-emerald-500 bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-emerald-600">Algeria</span>
+              Viking<br/><span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-emerald-600 inline-block pb-2">Algeria</span>
             </motion.h1>
             <p className="text-white/40 max-w-sm text-[10px] md:text-xs uppercase tracking-[0.3em] font-mono leading-relaxed text-center md:text-left">
               Personal notes and resources for the Viking Algeria YouTube channel.
@@ -241,6 +242,7 @@ export const Home = () => {
             </div>
           </div>
         )}
+        </div>
       </div>
 
       <footer className="border-t border-white/10 p-12 text-center flex flex-col items-center gap-6 mt-auto">

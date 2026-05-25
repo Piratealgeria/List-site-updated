@@ -118,22 +118,24 @@ export const PostDetail = () => {
       />
 
       {/* Floating Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 p-6 flex justify-between items-center pointer-events-none">
-        <button 
-          onClick={() => navigate('/')}
-          className="p-3 bg-black border border-white/20 hover:border-emerald-500 hover:shadow-[4px_4px_0_#10b981] transition-all pointer-events-auto flex items-center group cursor-pointer"
-        >
-          <ArrowLeft className="w-5 h-5 text-white group-hover:-translate-x-1 transition-transform group-hover:text-emerald-400" />
-        </button>
-        <div className="pointer-events-auto flex items-center gap-4">
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('toggle-music-player'))}
-            className="p-3 bg-black border border-white/20 hover:border-emerald-500 hover:shadow-[4px_4px_0_#10b981] transition-all flex items-center group cursor-pointer"
-            aria-label="Toggle music player"
+      <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
+        <div className="max-w-7xl mx-auto p-4 md:p-6 flex justify-between items-center w-full">
+          <button 
+            onClick={() => navigate('/')}
+            className="p-3 bg-black border border-white/20 hover:border-emerald-500 hover:shadow-[4px_4px_0_#10b981] transition-all pointer-events-auto flex items-center group cursor-pointer"
           >
-            <Music className="w-5 h-5 text-white/40 group-hover:text-emerald-500 transition-colors" />
+            <ArrowLeft className="w-5 h-5 text-white group-hover:-translate-x-1 transition-transform group-hover:text-emerald-400" />
           </button>
-          <CopyLinkButton url={window.location.href} />
+          <div className="pointer-events-auto flex items-center gap-2 md:gap-4">
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('toggle-music-player'))}
+              className="p-3 bg-black border border-white/20 hover:border-emerald-500 hover:shadow-[4px_4px_0_#10b981] transition-all flex items-center group cursor-pointer"
+              aria-label="Toggle music player"
+            >
+              <Music className="w-5 h-5 text-white/40 group-hover:text-emerald-500 transition-colors" />
+            </button>
+            <CopyLinkButton url={window.location.href} />
+          </div>
         </div>
       </header>
 
