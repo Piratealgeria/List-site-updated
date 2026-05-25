@@ -108,7 +108,7 @@ export const Home = () => {
               onClick={() => window.location.reload()}
               className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-display font-bold uppercase tracking-tighter leading-[0.85] mb-6 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap"
             >
-              Viking<br/><span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-emerald-600 inline-block pb-2">Algeria</span>
+              Viking<br/><span className="text-emerald-400 inline-block pb-2">Algeria</span>
             </motion.h1>
             <p className="text-white/40 max-w-sm text-[10px] md:text-xs uppercase tracking-[0.3em] font-mono leading-relaxed text-center md:text-left">
               Personal notes and resources for the Viking Algeria YouTube channel.

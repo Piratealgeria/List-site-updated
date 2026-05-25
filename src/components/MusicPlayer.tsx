@@ -22,19 +22,19 @@ export const MusicPlayer = () => {
   
   useEffect(() => {
     const handleToggle = () => {
-      setIsOpen(prev => {
-        const next = !prev;
-        if (next && !isPlaying) {
-          setIsPlaying(true);
-        } else if (!next) {
-          setIsPlaying(false);
-        }
-        return next;
-      });
+      setIsOpen(prev => !prev);
     };
     window.addEventListener('toggle-music-player', handleToggle);
     return () => window.removeEventListener('toggle-music-player', handleToggle);
-  }, [isPlaying]);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsPlaying(false);
+    } else {
+      setIsPlaying(true);
+    }
+  }, [isOpen]);
   
   const playerRef = useRef<any>(null);
 
@@ -63,8 +63,12 @@ export const MusicPlayer = () => {
   const handleSeekMouseUp = (e: React.MouseEvent<HTMLInputElement> | React.TouchEvent<HTMLInputElement>) => {
     // Note: cast is safe here as this event comes from the slider input
     const fraction = parseFloat((e.target as HTMLInputElement).value);
-    if (playerRef.current && typeof playerRef.current.seekTo === 'function') {
-      playerRef.current.seekTo(fraction, 'fraction');
+    if (playerRef.current) {
+      if (typeof playerRef.current.seekTo === 'function') {
+        playerRef.current.seekTo(fraction, 'fraction');
+      } else {
+        playerRef.current.currentTime = fraction * duration;
+      }
     }
   };
 
