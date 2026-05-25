@@ -18,7 +18,13 @@ export const Home = () => {
 
   useEffect(() => {
     fetch('/posts.json')
-      .then(res => res.json())
+      .then(async res => {
+         const text = await res.text();
+         if (text.trim().startsWith('<!DOCTYPE html>')) {
+           throw new Error('Received HTML instead of JSON. Check Vercel rewrites.');
+         }
+         return JSON.parse(text);
+      })
       .then((data: PostMetadata[]) => {
         setPosts(data);
         setLoading(false);

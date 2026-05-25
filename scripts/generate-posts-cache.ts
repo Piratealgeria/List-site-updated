@@ -160,7 +160,8 @@ async function generate() {
         thumbnail: thumbnail,
         videoUrl: isValidVideoUrl(videoUrl) ? videoUrl : (isValidVideoUrl(data.thumbnail) ? data.thumbnail : null),
         excerpt: data.excerpt || body.slice(0, 150).replace(/[#*`]/g, '').trim() + '...',
-        tags: data.tags || []
+        tags: data.tags || [],
+        content: body
       };
 
       index++;

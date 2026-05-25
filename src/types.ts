@@ -8,4 +8,5 @@ export interface PostMetadata {
   videoUrl?: string | null;
   excerpt?: string;
   tags?: string[];
+  content?: string;
 }

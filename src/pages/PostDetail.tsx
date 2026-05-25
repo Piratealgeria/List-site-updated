@@ -31,15 +31,33 @@ export const PostDetail = () => {
 
   useEffect(() => {
     fetch('/posts.json')
-      .then(res => res.json())
+      .then(async res => {
+         const text = await res.text();
+         if (text.trim().startsWith('<!DOCTYPE html>')) {
+           throw new Error('Received HTML instead of JSON.');
+         }
+         return JSON.parse(text);
+      })
       .then(async (data: PostMetadata[]) => {
         setAllPosts(data);
         
         const found = data.find(p => p.id === id);
         if (found) {
           setPost(found);
-          const contentRes = await fetch(`/posts/${found.file}`);
-          let text = await contentRes.text();
+          let text = found.content || '';
+          
+          if (!text) {
+             const contentRes = await fetch(`/posts/${encodeURIComponent(found.file)}`);
+             if (contentRes.ok) {
+                 text = await contentRes.text();
+             } else {
+                 text = "Could not load post content. Please try again.";
+             }
+          }
+          
+          if (text.trim().startsWith('<!DOCTYPE html>')) {
+             text = "Could not load post content. Server returned HTML.";
+          }
           
           // Simple frontmatter strip
           if (text.startsWith('---')) {
