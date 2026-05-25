@@ -30,7 +30,7 @@ export const PostDetail = () => {
   }, []);
 
   useEffect(() => {
-    fetch('/api/posts')
+    fetch('/posts.json')
       .then(res => res.json())
       .then(async (data: PostMetadata[]) => {
         setAllPosts(data);

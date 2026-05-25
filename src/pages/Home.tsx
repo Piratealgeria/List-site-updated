@@ -17,7 +17,7 @@ export const Home = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    fetch('/api/posts')
+    fetch('/posts.json')
       .then(res => res.json())
       .then((data: PostMetadata[]) => {
         setPosts(data);
