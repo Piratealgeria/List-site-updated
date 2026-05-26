@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight, ArrowUp, Music } from 'lucide-react';
 import { PostMetadata } from '../types';
 import { CopyLinkButton } from '../components/CopyLinkButton';
 import { VideoEmbed, CopyableListItem, FormattedLine } from '../components/MarkdownComponents';
+import { CopyHint } from '../components/CopyHint';
 import { fetchPosts, fetchPostContent } from '../api';
 
 export const PostDetail = () => {
@@ -101,6 +102,7 @@ export const PostDetail = () => {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
 
       {/* Reading Progress Bar */}
+      <CopyHint />
       <motion.div 
         className="fixed top-0 left-0 h-1 bg-emerald-500 z-[60] origin-left"
         style={{ width: `${scrollProgress}%` }}
