@@ -12,7 +12,7 @@ import { PostDetail } from './pages/PostDetail';
 export default function App() {
   return (
     <Router>
-      <div className="relative min-h-screen pb-24 font-sans bg-[#030303] text-white selection:bg-emerald-500/30">
+      <div className="relative min-h-screen font-sans bg-[#030303] text-white selection:bg-emerald-500/30">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/post/:id" element={<PostDetail />} />

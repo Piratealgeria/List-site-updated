@@ -19,6 +19,7 @@ export const MusicPlayer = () => {
   const [played, setPlayed] = useState(0);       // Range 0 - 1
   const [duration, setDuration] = useState(0);   // In seconds
   const [isOpen, setIsOpen] = useState(false);
+  const [isSeeking, setIsSeeking] = useState(false);
   
   useEffect(() => {
     const handleToggle = () => {
@@ -117,7 +118,7 @@ export const MusicPlayer = () => {
           if (e.target && e.target.currentTime) {
             const current = e.target.currentTime;
             const currentDuration = e.target.duration || duration;
-            if (currentDuration > 0) {
+            if (currentDuration > 0 && !isSeeking) {
               setPlayed(current / currentDuration);
             }
           }
@@ -229,9 +230,17 @@ export const MusicPlayer = () => {
                       max={1}
                       step="any"
                       value={played}
+                      onMouseDown={() => setIsSeeking(true)}
+                      onTouchStart={() => setIsSeeking(true)}
                       onChange={handleSeekChange}
-                      onMouseUp={handleSeekMouseUp}
-                      onTouchEnd={handleSeekMouseUp}
+                      onMouseUp={(e) => {
+                        handleSeekMouseUp(e);
+                        setIsSeeking(false);
+                      }}
+                      onTouchEnd={(e) => {
+                        handleSeekMouseUp(e);
+                        setIsSeeking(false);
+                      }}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     />
                     <div className="w-full h-full bg-white/10 overflow-hidden relative rounded-full">

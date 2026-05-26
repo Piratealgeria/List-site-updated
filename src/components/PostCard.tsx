@@ -3,9 +3,15 @@ import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { cn } from '../utils';
 import { PostMetadata } from '../types';
+import { fetchPostContent } from '../api';
 
 export const PostCard = ({ post, index }: { post: PostMetadata; index: number }) => {
   const [isLoaded, setIsLoaded] = useState(false);
+
+  const handleMouseEnter = () => {
+    // Prefetch content when hovering over the card
+    fetchPostContent(post.file).catch(() => {});
+  };
 
   return (
     <motion.div
@@ -13,6 +19,7 @@ export const PostCard = ({ post, index }: { post: PostMetadata; index: number })
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: index * 0.05, duration: 0.4, ease: "easeOut" }}
       className="group relative h-full"
+      onMouseEnter={handleMouseEnter}
     >
       <Link to={`/post/${post.id}`} className="block h-full">
         <div className="relative h-full aspect-video bg-black border border-white/20 transition-all duration-300 group-hover:-translate-y-1 group-hover:-translate-x-1 group-hover:shadow-[8px_8px_0px_#10b981] group-hover:border-emerald-500 overflow-hidden flex flex-col">

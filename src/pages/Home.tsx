@@ -5,6 +5,7 @@ import { cn } from '../utils';
 import { PostMetadata } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import { PostCard } from '../components/PostCard';
+import { fetchPosts } from '../api';
 
 const POSTS_PER_PAGE = 6;
 
@@ -17,14 +18,7 @@ export const Home = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    fetch('/posts.json')
-      .then(async res => {
-         const text = await res.text();
-         if (text.trim().startsWith('<!DOCTYPE html>')) {
-           throw new Error('Received HTML instead of JSON. Check Vercel rewrites.');
-         }
-         return JSON.parse(text);
-      })
+    fetchPosts()
       .then((data: PostMetadata[]) => {
         setPosts(data);
         setLoading(false);
@@ -94,7 +88,7 @@ export const Home = () => {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white flex flex-col relative overflow-hidden font-sans">
-      <div className="absolute inset-0 bg-grid-pattern pointer-events-none z-0 opacity-40 mix-blend-screen" />
+      <div className="absolute -inset-[4rem] bg-grid-pattern pointer-events-none z-0 opacity-40 mix-blend-screen" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none z-0" />
       
       <div className="flex-grow relative z-10 w-full flex flex-col items-center">

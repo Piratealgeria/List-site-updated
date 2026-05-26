@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight, ArrowUp, Music } from 'lucide-react';
 import { PostMetadata } from '../types';
 import { CopyLinkButton } from '../components/CopyLinkButton';
 import { VideoEmbed, CopyableListItem, FormattedLine } from '../components/MarkdownComponents';
+import { fetchPosts, fetchPostContent } from '../api';
 
 export const PostDetail = () => {
   const { id } = useParams();
@@ -30,14 +31,7 @@ export const PostDetail = () => {
   }, []);
 
   useEffect(() => {
-    fetch('/posts.json')
-      .then(async res => {
-         const text = await res.text();
-         if (text.trim().startsWith('<!DOCTYPE html>')) {
-           throw new Error('Received HTML instead of JSON.');
-         }
-         return JSON.parse(text);
-      })
+    fetchPosts()
       .then(async (data: PostMetadata[]) => {
         setAllPosts(data);
         
@@ -47,16 +41,11 @@ export const PostDetail = () => {
           let text = found.content || '';
           
           if (!text) {
-             const contentRes = await fetch(`/posts/${encodeURIComponent(found.file)}`);
-             if (contentRes.ok) {
-                 text = await contentRes.text();
-             } else {
-                 text = "Could not load post content. Please try again.";
+             try {
+               text = await fetchPostContent(found.file);
+             } catch (e) {
+               text = "Could not load post content. Please try again.";
              }
-          }
-          
-          if (text.trim().startsWith('<!DOCTYPE html>')) {
-             text = "Could not load post content. Server returned HTML.";
           }
           
           // Simple frontmatter strip
@@ -100,7 +89,7 @@ export const PostDetail = () => {
 
   if (!post) return (
     <div className="min-h-screen bg-[#030303] text-white flex flex-col items-center justify-center gap-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid-pattern pointer-events-none z-0 opacity-40 mix-blend-screen" />
+      <div className="absolute -inset-[4rem] bg-grid-pattern pointer-events-none z-0 opacity-40 mix-blend-screen" />
       <h1 className="text-4xl font-display font-bold relative z-10">Post Not Found</h1>
       <Link to="/" className="text-emerald-500 hover:underline relative z-10">Back to Home</Link>
     </div>
@@ -108,7 +97,7 @@ export const PostDetail = () => {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white flex flex-col relative overflow-hidden font-sans">
-      <div className="absolute inset-0 bg-grid-pattern pointer-events-none z-0 opacity-20 mix-blend-screen" />
+      <div className="absolute -inset-[4rem] bg-grid-pattern pointer-events-none z-0 opacity-20 mix-blend-screen" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
 
       {/* Reading Progress Bar */}
@@ -177,11 +166,11 @@ export const PostDetail = () => {
                   },
                   img: ({ src, alt }) => (
                     <div className="my-16 -mx-4 md:-mx-8 group bg-black border border-white/20 shadow-[8px_8px_0_#10b981] overflow-hidden">
-                      <div className="relative aspect-video w-full">
+                      <div className="relative w-full flex justify-center bg-white/5">
                         <img 
                           src={src} 
                           alt={alt} 
-                          className="absolute inset-0 w-full h-full object-cover md:grayscale transition-all duration-500 md:group-hover:grayscale-0" 
+                          className="w-full h-auto object-contain max-h-[80vh] md:grayscale transition-all duration-500 md:group-hover:grayscale-0" 
                           referrerPolicy="no-referrer"
                           loading="lazy"
                         />
