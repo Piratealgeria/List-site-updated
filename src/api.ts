@@ -1,22 +1,31 @@
 import { PostMetadata } from './types';
 
 let cachedPostsPromise: Promise<PostMetadata[]> | null = null;
-let postContentCache: Record<string, Promise<string>> = {};
+const postContentCache: Record<string, Promise<string>> = {};
 
-const loadPosts = () => {
-  return fetch('/posts.json')
-    .then(async res => {
-       const text = await res.text();
-       if (text.trim().startsWith('<!DOCTYPE html>')) {
-         throw new Error('Received HTML instead of JSON.');
-       }
-       return JSON.parse(text);
-    })
-    .catch(err => {
-       // Reset cache on error so next attempt can retry
-       cachedPostsPromise = null;
-       throw err;
-    });
+const loadPosts = async (): Promise<PostMetadata[]> => {
+  try {
+    const res = await fetch('/posts.json');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+      throw new Error('Received HTML instead of JSON.');
+    }
+    return JSON.parse(text);
+  } catch (err) {
+    // Fallback: try /api/posts if available
+    try {
+      const apiRes = await fetch('/api/posts');
+      if (apiRes.ok) {
+        const data = await apiRes.json();
+        if (Array.isArray(data)) return data;
+      }
+    } catch {
+      // Ignore API fallback failure
+    }
+    cachedPostsPromise = null;
+    throw err;
+  }
 };
 
 // Prefetch immediately
@@ -35,16 +44,16 @@ export const fetchPostContent = (fileName: string): Promise<string> => {
   if (!postContentCache[fileName]) {
     postContentCache[fileName] = fetch(`/posts/${encodeURIComponent(fileName)}`)
       .then(async res => {
-         if (!res.ok) throw new Error('Could not load post content. Please try again.');
-         const text = await res.text();
-         if (text.trim().startsWith('<!DOCTYPE html>')) {
-             throw new Error('Could not load post content. Server returned HTML.');
-         }
-         return text;
+        if (!res.ok) throw new Error('Could not load post content. Please try again.');
+        const text = await res.text();
+        if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+          throw new Error('Could not load post content. Server returned HTML.');
+        }
+        return text;
       })
       .catch(err => {
-         postContentCache[fileName] = Promise.reject(err);
-         return "Could not load post content. Please try again.";
+        delete postContentCache[fileName];
+        throw err;
       });
   }
   return postContentCache[fileName];

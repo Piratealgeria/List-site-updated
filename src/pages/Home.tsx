@@ -57,6 +57,25 @@ export const Home = () => {
     setCurrentPage(1);
   }, [debouncedSearchQuery]);
 
+  // Global keyboard shortcuts: / or Ctrl/Cmd+K to search, Esc to close
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      const isInputActive = activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA' || (activeEl as HTMLElement)?.isContentEditable;
+
+      if ((e.key === '/' || ((e.metaKey || e.ctrlKey) && e.key === 'k')) && !isInputActive) {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      } else if (e.key === 'Escape' && isSearchOpen) {
+        setIsSearchOpen(false);
+        setSearchQuery('');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSearchOpen]);
+
   // Scroll to top on page change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -77,7 +96,7 @@ export const Home = () => {
   );
 
   if (loading) return (
-    <div className="min-h-screen bg-[#030303] flex items-center justify-center">
+    <div className="min-h-screen bg-transparent flex items-center justify-center">
       <motion.div 
         animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
         transition={{ duration: 2, repeat: Infinity }}
@@ -87,10 +106,7 @@ export const Home = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#030303] text-white flex flex-col relative overflow-hidden font-sans">
-      <div className="absolute -inset-[4rem] bg-grid-pattern pointer-events-none z-0 opacity-40 mix-blend-screen" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none z-0" />
-      
+    <div className="min-h-screen bg-transparent text-white flex flex-col relative overflow-hidden font-sans">
       <div className="flex-grow relative z-10 w-full flex flex-col items-center">
         <div className="max-w-7xl mx-auto w-full px-4 md:px-8 py-12 md:py-20 flex-1">
           <header className="mb-16 md:mb-20 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-8">
@@ -99,10 +115,25 @@ export const Home = () => {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              onClick={() => window.location.reload()}
-              className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-display font-bold uppercase tracking-tighter leading-[0.85] mb-6 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap"
+              onClick={() => {
+                setSearchQuery('');
+                setIsSearchOpen(false);
+                setCurrentPage(1);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="group text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-display font-bold uppercase tracking-tighter leading-[0.85] mb-6 cursor-pointer transition-opacity whitespace-nowrap relative"
             >
-              Viking<br/><span className="text-emerald-400 inline-block pb-2">Algeria</span>
+              <span className="relative inline-block overflow-hidden">
+                <span className="relative z-10 block group-hover:animate-glitch-1">Viking</span>
+                <span className="absolute top-0 left-0 -translate-x-[2px] text-red-500 opacity-0 group-hover:opacity-70 group-hover:animate-glitch-2 mix-blend-screen z-0">Viking</span>
+                <span className="absolute top-0 left-0 translate-x-[2px] text-blue-500 opacity-0 group-hover:opacity-70 group-hover:animate-glitch-3 mix-blend-screen z-0">Viking</span>
+              </span>
+              <br/>
+              <span className="relative inline-block pb-2">
+                <span className="text-emerald-400 relative z-10 block group-hover:animate-glitch-2">Algeria</span>
+                <span className="absolute top-0 left-0 -translate-x-[2px] text-red-500 opacity-0 group-hover:opacity-70 group-hover:animate-glitch-3 mix-blend-screen z-0">Algeria</span>
+                <span className="absolute top-0 left-0 translate-x-[2px] text-blue-500 opacity-0 group-hover:opacity-70 group-hover:animate-glitch-1 mix-blend-screen z-0">Algeria</span>
+              </span>
             </motion.h1>
             <p className="text-white/40 max-w-sm text-[10px] md:text-xs uppercase tracking-[0.3em] font-mono leading-relaxed text-center md:text-left">
               Personal notes and resources for the Viking Algeria YouTube channel.
@@ -126,9 +157,15 @@ export const Home = () => {
                   <input
                     autoFocus
                     type="text"
-                    placeholder="Search posts..."
+                    placeholder="Search posts (Press Esc to close)..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        setIsSearchOpen(false);
+                        setSearchQuery('');
+                      }
+                    }}
                     className="w-full bg-black border border-white/20 py-3 px-6 pl-12 focus:outline-none focus:border-emerald-500 transition-all font-mono text-[10px] md:text-sm uppercase tracking-widest shadow-[4px_4px_0_#10b98100] focus:shadow-[4px_4px_0_#10b981]"
                   />
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-emerald-500 transition-colors" />
@@ -160,8 +197,27 @@ export const Home = () => {
               Showing results for: <span className="text-emerald-500">{debouncedSearchQuery}</span>
             </h2>
             {filteredPosts.length === 0 && (
-              <div className="py-20 text-center">
-                <p className="text-white/20 uppercase tracking-widest font-mono">No posts found matching your search.</p>
+              <div className="py-20 flex justify-center">
+                <div className="border border-red-500/30 bg-red-500/5 p-6 max-w-lg w-full relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-0.5 bg-red-500/50" />
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    <span className="font-mono text-xs text-red-500 font-bold uppercase tracking-widest">ERR_NOT_FOUND</span>
+                  </div>
+                  <p className="text-white/60 font-mono text-sm leading-relaxed mb-4">
+                    $ grep -r "{debouncedSearchQuery}" /content/posts/* <br/>
+                    <span className="text-red-400">grep: No match found.</span>
+                  </p>
+                  <button 
+                    onClick={() => {
+                      setSearchQuery('');
+                      setIsSearchOpen(false);
+                    }}
+                    className="text-xs font-mono text-white/40 hover:text-white transition-colors underline underline-offset-4"
+                  >
+                    Clear Search Buffer
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -189,32 +245,75 @@ export const Home = () => {
               <div className="hidden md:flex flex-wrap items-center justify-center gap-1">
                 {(() => {
                   const pages = [];
-                  const delta = 2; // Fixed delta for desktop
-                  const left = currentPage - delta;
-                  const right = currentPage + delta;
+                  const delta = 2;
+                  const left = Math.max(2, currentPage - delta);
+                  const right = Math.min(totalPages - 1, currentPage + delta);
                   
-                  for (let i = 1; i <= totalPages; i++) {
-                    if (i === 1 || i === totalPages || (i >= left && i <= right)) {
-                      pages.push(
-                        <button
-                          key={i}
-                          onClick={() => setCurrentPage(i)}
-                          className={cn(
-                            "w-12 h-12 flex items-center justify-center transition-all font-mono text-sm font-bold border border-transparent",
-                            currentPage === i 
-                              ? "bg-emerald-500 text-black shadow-[2px_2px_0_#fff]" 
-                              : "text-white/50 hover:text-emerald-400 hover:bg-white/5 hover:border-white/10"
-                          )}
-                        >
-                          {i.toString().padStart(2, '0')}
-                        </button>
-                      );
-                    } else if (i === left - 1 || i === right + 1) {
-                      pages.push(
-                        <span key={i} className="w-8 text-center text-white/20 font-mono text-xs tracking-widest shrink-0">..</span>
-                      );
-                    }
+                  // Avoid single-page ellipsis by expanding boundaries if adjacent
+                  const startPage = left === 3 ? 2 : left;
+                  const endPage = right === totalPages - 2 ? totalPages - 1 : right;
+
+                  pages.push(
+                    <button
+                      key={1}
+                      onClick={() => setCurrentPage(1)}
+                      className={cn(
+                        "w-12 h-12 flex items-center justify-center transition-all font-mono text-sm font-bold border border-transparent",
+                        currentPage === 1 
+                          ? "bg-emerald-500 text-black shadow-[2px_2px_0_#fff]" 
+                          : "text-white/50 hover:text-emerald-400 hover:bg-white/5 hover:border-white/10"
+                      )}
+                    >
+                      01
+                    </button>
+                  );
+
+                  if (startPage > 2) {
+                    pages.push(
+                      <span key="ellipsis-left" className="w-8 text-center text-white/20 font-mono text-xs tracking-widest shrink-0">..</span>
+                    );
                   }
+
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage(i)}
+                        className={cn(
+                          "w-12 h-12 flex items-center justify-center transition-all font-mono text-sm font-bold border border-transparent",
+                          currentPage === i 
+                            ? "bg-emerald-500 text-black shadow-[2px_2px_0_#fff]" 
+                            : "text-white/50 hover:text-emerald-400 hover:bg-white/5 hover:border-white/10"
+                        )}
+                      >
+                        {i.toString().padStart(2, '0')}
+                      </button>
+                    );
+                  }
+
+                  if (endPage < totalPages - 1) {
+                    pages.push(
+                      <span key="ellipsis-right" className="w-8 text-center text-white/20 font-mono text-xs tracking-widest shrink-0">..</span>
+                    );
+                  }
+
+                  if (totalPages > 1) {
+                    pages.push(
+                      <button
+                        key={totalPages}
+                        onClick={() => setCurrentPage(totalPages)}
+                        className={cn(
+                          "w-12 h-12 flex items-center justify-center transition-all font-mono text-sm font-bold border border-transparent",
+                          currentPage === totalPages 
+                            ? "bg-emerald-500 text-black shadow-[2px_2px_0_#fff]" 
+                            : "text-white/50 hover:text-emerald-400 hover:bg-white/5 hover:border-white/10"
+                        )}
+                      >
+                        {totalPages.toString().padStart(2, '0')}
+                      </button>
+                    );
+                  }
+
                   return pages;
                 })()}
               </div>

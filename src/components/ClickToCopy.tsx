@@ -1,33 +1,42 @@
 import React, { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { cn } from '../utils';
+import { cn, copyToClipboard } from '../utils';
 
 export const ClickToCopy = ({ text, children, className }: { text: string, children: React.ReactNode, className?: string }) => {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = (e: React.MouseEvent) => {
+  const handleCopy = async (e: React.MouseEvent | React.KeyboardEvent) => {
     // If clicking a link, don't copy
     if ((e.target as HTMLElement).closest('a')) return;
     
+    // If user has actively selected text across the element, don't hijack their copy
+    const selection = typeof window !== 'undefined' ? window.getSelection()?.toString() : '';
+    if (selection && selection.trim().length > 0) return;
+
     e.stopPropagation();
     if (!text) return;
     
-    // Clean text: remove leading/trailing whitespace and multiple spaces
-    const cleanText = text.trim();
-    if (!cleanText) return;
-
-    navigator.clipboard.writeText(cleanText).then(() => {
+    const success = await copyToClipboard(text);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    }
   };
 
   return (
     <span 
+      role="button"
+      tabIndex={0}
       onClick={handleCopy}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCopy(e);
+        }
+      }}
       className={cn(
-        "cursor-pointer transition-colors relative group/copy inline-flex items-center w-full break-words", 
+        "cursor-pointer transition-colors relative group/copy inline-flex items-center w-full break-words outline-none focus-visible:ring-1 focus-visible:ring-emerald-500 rounded-sm", 
         className
       )}
     >

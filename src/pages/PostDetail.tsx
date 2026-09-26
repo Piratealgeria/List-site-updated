@@ -7,9 +7,10 @@ import { motion } from 'motion/react';
 import { ArrowLeft, ArrowRight, ArrowUp, Music } from 'lucide-react';
 import { PostMetadata } from '../types';
 import { CopyLinkButton } from '../components/CopyLinkButton';
-import { VideoEmbed, CopyableListItem, FormattedLine } from '../components/MarkdownComponents';
+import { VideoEmbed, CopyableListItem, FormattedLine, CodeBlock } from '../components/MarkdownComponents';
 import { CopyHint } from '../components/CopyHint';
 import { fetchPosts, fetchPostContent } from '../api';
+import { sanitizeHtml, copyToClipboard } from '../utils';
 
 export const PostDetail = () => {
   const { id } = useParams();
@@ -23,7 +24,7 @@ export const PostDetail = () => {
   useEffect(() => {
     const handleScroll = () => {
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = (window.scrollY / totalHeight) * 100;
+      const progress = totalHeight > 0 ? (window.scrollY / totalHeight) * 100 : 0;
       setScrollProgress(progress);
     };
 
@@ -49,12 +50,9 @@ export const PostDetail = () => {
              }
           }
           
-          // Simple frontmatter strip
+          // Robust frontmatter strip (handles horizontal rules inside body without truncating)
           if (text.startsWith('---')) {
-            const parts = text.split('---');
-            if (parts.length >= 3) {
-              text = parts.slice(2).join('---').trim();
-            }
+            text = text.replace(/^---[\r\n]+[\s\S]*?[\r\n]+---[\r\n]*/, '').trim();
           }
           
           setContent(text);
@@ -82,25 +80,67 @@ export const PostDetail = () => {
     }
   }, [post]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input, textarea, or select
+      if (
+        document.activeElement?.tagName === 'INPUT' ||
+        document.activeElement?.tagName === 'TEXTAREA' ||
+        document.activeElement?.tagName === 'SELECT' ||
+        (document.activeElement as HTMLElement)?.isContentEditable
+      ) {
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        navigate('/');
+        return;
+      }
+
+      // Left arrow navigates to nextPost (Older post on the left card)
+      // Right arrow navigates to prevPost (Newer post on the right card)
+      if (e.key === 'ArrowLeft' && nextPost) {
+        navigate(`/post/${nextPost.id}`);
+      } else if (e.key === 'ArrowRight' && prevPost) {
+        navigate(`/post/${prevPost.id}`);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [prevPost, nextPost, navigate]);
+
   if (loading) return (
-    <div className="min-h-screen bg-[#030303] flex items-center justify-center">
+    <div className="min-h-screen bg-transparent flex items-center justify-center">
       <div className="w-12 h-12 border-2 border-emerald-500 rounded-full border-t-transparent animate-spin" />
     </div>
   );
 
   if (!post) return (
-    <div className="min-h-screen bg-[#030303] text-white flex flex-col items-center justify-center gap-4 relative overflow-hidden">
-      <div className="absolute -inset-[4rem] bg-grid-pattern pointer-events-none z-0 opacity-40 mix-blend-screen" />
-      <h1 className="text-4xl font-display font-bold relative z-10">Post Not Found</h1>
-      <Link to="/" className="text-emerald-500 hover:underline relative z-10">Back to Home</Link>
+    <div className="min-h-screen bg-transparent text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      <div className="border border-red-500/30 bg-red-500/5 p-8 max-w-lg w-full relative overflow-hidden shadow-[0_0_30px_rgba(239,68,68,0.1)]">
+        <div className="absolute top-0 left-0 w-full h-1 bg-red-500/50" />
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+          <span className="font-mono text-sm text-red-500 font-bold uppercase tracking-widest">FATAL_ERROR: 404</span>
+        </div>
+        <p className="text-white/60 font-mono text-sm leading-relaxed mb-8 break-words">
+          $ curl https://viking.algeria/post/{id} <br/>
+          <span className="text-red-400">Error: Remote host rejected connection.</span><br/>
+          <span className="text-white/40">Reason: Block does not exist in the current timeline.</span>
+        </p>
+        <Link 
+          to="/" 
+          className="inline-block bg-white/5 border border-white/20 px-6 py-3 font-mono text-xs uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-400 transition-colors"
+        >
+          Return to Base
+        </Link>
+      </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#030303] text-white flex flex-col relative overflow-hidden font-sans">
-      <div className="absolute -inset-[4rem] bg-grid-pattern pointer-events-none z-0 opacity-20 mix-blend-screen" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
-
+    <div className="min-h-screen bg-transparent text-white flex flex-col relative overflow-hidden font-sans">
       {/* Reading Progress Bar */}
       <CopyHint />
       <motion.div 
@@ -168,13 +208,24 @@ export const PostDetail = () => {
                   },
                   img: ({ src, alt }) => (
                     <div className="my-16 -mx-4 md:-mx-8 group bg-black border border-white/20 shadow-[8px_8px_0_#10b981] overflow-hidden">
-                      <div className="relative w-full flex justify-center bg-white/5">
+                      <div className="relative w-full flex justify-center bg-white/5 min-h-[120px] items-center">
                         <img 
                           src={src} 
                           alt={alt} 
                           className="w-full h-auto object-contain max-h-[80vh] md:grayscale transition-all duration-500 md:group-hover:grayscale-0" 
                           referrerPolicy="no-referrer"
                           loading="lazy"
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent && !parent.querySelector('.img-fallback-block')) {
+                              const fallback = document.createElement('div');
+                              fallback.className = 'img-fallback-block p-8 text-center font-mono text-xs text-white/40 uppercase tracking-widest';
+                              fallback.innerText = '[IMAGE_UNAVAILABLE_OR_OFFLINE]';
+                              parent.appendChild(fallback);
+                            }
+                          }}
                         />
                       </div>
                       {alt && <p className="text-center md:text-left text-xs text-emerald-500 p-4 font-mono uppercase tracking-widest border-t border-white/20 bg-black/50">{alt}</p>}
@@ -187,6 +238,20 @@ export const PostDetail = () => {
                       <FormattedLine>{children}</FormattedLine>
                     </div>
                   ),
+                  code: ({ node, inline, className, children, ...props }: any) => {
+                    const match = /language-(\w+)/.exec(className || '');
+                    const isCodeBlock = !inline && (Boolean(match) || (typeof children === 'string' && children.includes('\n')));
+                    return isCodeBlock ? (
+                      <CodeBlock className={className} {...props}>
+                        {children}
+                      </CodeBlock>
+                    ) : (
+                      <code className="bg-white/10 px-1.5 py-0.5 rounded-sm font-mono text-emerald-400 text-sm" {...props}>
+                        {children}
+                      </code>
+                    );
+                  },
+                  pre: ({ children }) => <>{children}</>, // Wrapper is handled by code component
                 }}
               >
                 {content}
@@ -195,18 +260,18 @@ export const PostDetail = () => {
           ) : (
             <div 
               className="html-post-content prose prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: content }}
-              onClick={(e) => {
-                const target = e.target as HTMLElement;
-                if (target.tagName === 'LI') {
-                  navigator.clipboard.writeText(target.innerText);
-                  const originalText = target.innerText;
-                  target.innerText = 'Copied!';
-                  target.classList.add('text-emerald-400');
-                  setTimeout(() => {
-                    target.innerText = originalText;
-                    target.classList.remove('text-emerald-400');
-                  }, 2000);
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
+              onClick={async (e) => {
+                const target = (e.target as HTMLElement).closest('li');
+                if (target && !((e.target as HTMLElement).closest('a'))) {
+                  const textToCopy = target.innerText;
+                  const success = await copyToClipboard(textToCopy);
+                  if (success) {
+                    target.classList.add('outline', 'outline-1', 'outline-emerald-400', 'bg-emerald-500/10');
+                    setTimeout(() => {
+                      target.classList.remove('outline', 'outline-1', 'outline-emerald-400', 'bg-emerald-500/10');
+                    }, 1500);
+                  }
                 }
               }}
             />

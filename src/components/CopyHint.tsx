@@ -6,7 +6,12 @@ export const CopyHint = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const lastSeen = localStorage.getItem('viking_copy_hint_seen_timestamp');
+    let lastSeen: string | null = null;
+    try {
+      lastSeen = localStorage.getItem('viking_copy_hint_seen_timestamp');
+    } catch {
+      lastSeen = null;
+    }
     const now = Date.now();
     const HOURS_24 = 24 * 60 * 60 * 1000;
     
@@ -23,7 +28,11 @@ export const CopyHint = () => {
     if (isVisible) {
       const autoDismiss = setTimeout(() => {
         setIsVisible(false);
-        localStorage.setItem('viking_copy_hint_seen_timestamp', Date.now().toString());
+        try {
+          localStorage.setItem('viking_copy_hint_seen_timestamp', Date.now().toString());
+        } catch {
+          // Ignore
+        }
       }, 8000);
       return () => clearTimeout(autoDismiss);
     }
@@ -31,7 +40,11 @@ export const CopyHint = () => {
 
   const handleDismiss = () => {
     setIsVisible(false);
-    localStorage.setItem('viking_copy_hint_seen_timestamp', Date.now().toString());
+    try {
+      localStorage.setItem('viking_copy_hint_seen_timestamp', Date.now().toString());
+    } catch {
+      // Ignore
+    }
   };
 
   return (

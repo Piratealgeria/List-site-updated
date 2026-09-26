@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { copyToClipboard } from '../utils';
 
 export const CopyLinkButton = ({ url }: { url: string }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(url);
+    const targetUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
+    const success = await copyToClipboard(targetUrl);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Error copying:', err);
     }
   };
 
@@ -20,7 +20,7 @@ export const CopyLinkButton = ({ url }: { url: string }) => {
       <button
         onClick={handleCopy}
         className="p-3 bg-black border border-white/20 hover:border-emerald-500 hover:shadow-[4px_4px_0_#10b981] transition-all flex items-center justify-center group"
-        aria-label="Copy Link"
+        aria-label={copied ? "Link copied to clipboard" : "Copy link to clipboard"}
       >
         {copied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5 text-white group-hover:text-emerald-400 transition-colors" />}
       </button>

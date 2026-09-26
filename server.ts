@@ -25,40 +25,79 @@ const saveThumbnailCache = () => {
   }
 };
 
+const isSafePublicUrl = (urlStr: string): boolean => {
+  try {
+    const parsed = new URL(urlStr);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+    const hostname = parsed.hostname.toLowerCase();
+    
+    // Block loopback, private networks, cloud metadata, link-local, carrier-grade NAT, and IP obfuscations
+    if (
+      hostname === 'localhost' ||
+      hostname === '0.0.0.0' ||
+      hostname === '127.0.0.1' ||
+      hostname === '::1' ||
+      hostname === '[::1]' ||
+      hostname.startsWith('127.') ||
+      hostname === '169.254.169.254' ||
+      hostname.startsWith('169.254.') ||
+      hostname.endsWith('.internal') ||
+      hostname.endsWith('.local') ||
+      hostname.endsWith('.localhost') ||
+      /^10\./.test(hostname) ||
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname) ||
+      /^192\.168\./.test(hostname) ||
+      /^100\.(6[4-9]|[7-9][0-9]|1[0-1][0-9]|12[0-7])\./.test(hostname) ||
+      /^0x[0-9a-f]+/i.test(hostname) ||
+      /^\d+$/.test(hostname) ||
+      /^\[.*\]$/.test(hostname)
+    ) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const fetchOgImage = async (url: string) => {
-  if (!url || !url.startsWith('http')) return null;
+  if (!url || !isSafePublicUrl(url)) return null;
   if (thumbnailCache.has(url)) return thumbnailCache.get(url);
 
   try {
     const isOdysee = url.includes('odysee.com');
     const targetUrl = isOdysee ? `https://odysee.com/$/oembed?url=${encodeURIComponent(url)}` : url;
     
-    // Use a shorter timeout to prevent blocking the /api/posts request for too long
+    // Use a shorter timeout and maxRedirects: 0 to prevent SSRF redirect bypass
     const response = await axios.get(targetUrl, { 
       timeout: 5000,
+      maxRedirects: 0,
+      maxContentLength: 512 * 1024,
+      maxBodyLength: 512 * 1024,
       headers: { 
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': isOdysee ? 'application/json' : 'text/html,application/xhtml+xml'
-      }
+      },
+      validateStatus: (status) => status >= 200 && status < 300
     });
 
     let imageUrl = null;
     if (isOdysee && response.data?.thumbnail_url) {
       imageUrl = response.data.thumbnail_url;
-    } else if (!isOdysee) {
-      const html = response.data;
-      const ogImageMatch = html.match(/<meta.*?property="og:image".*?content="(.*?)".*?>/) || 
-                         html.match(/<meta.*?content="(.*?)".*?property="og:image".*?>/);
-      if (ogImageMatch) imageUrl = ogImageMatch[1];
+    } else if (!isOdysee && typeof response.data === 'string') {
+      const html = response.data.slice(0, 100000);
+      const match = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) || 
+                    html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
+      if (match) imageUrl = match[1];
     }
 
-    if (imageUrl) {
+    if (imageUrl && isSafePublicUrl(imageUrl)) {
       thumbnailCache.set(url, imageUrl);
       saveThumbnailCache();
       return imageUrl;
     }
   } catch (err: any) {
-    if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+    if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
       console.warn(`[Timeout] Could not fetch thumbnail for ${url}`);
     } else {
       console.error(`Error fetching thumbnail for ${url}:`, err.message);
@@ -185,15 +224,16 @@ async function startServer() {
               return url.includes('youtube.com') || url.includes('youtu.be') || url.includes('odysee.com');
             };
 
+            const cleanBody = body.replace(/<[^>]*>/g, '').replace(/[#*`_~]/g, '').replace(/\s+/g, ' ').trim();
             const postData = {
               id: data.id?.toString() || file.replace(/\.[^/.]+$/, ""),
-              numericId: typeof data.id === 'number' ? data.id : parseInt(data.id as string) || 0,
+              numericId: typeof data.id === 'number' ? data.id : parseInt(String(data.id || file).replace(/\D/g, '')) || 0,
               title: data.title || file.replace(/\.[^/.]+$/, ""),
               file: file,
               type: file.endsWith(".md") ? "md" : "html",
               thumbnail: thumbnail,
               videoUrl: isValidVideoUrl(videoUrl) ? videoUrl : (isValidVideoUrl(data.thumbnail) ? data.thumbnail : null),
-              excerpt: data.excerpt || body.slice(0, 150).replace(/[#*`]/g, '').trim() + '...',
+              excerpt: data.excerpt || (cleanBody.slice(0, 150).trim() + (cleanBody.length > 150 ? '...' : '')),
               tags: data.tags || []
             };
 

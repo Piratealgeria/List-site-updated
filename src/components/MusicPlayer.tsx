@@ -37,15 +37,39 @@ export const MusicPlayer = () => {
     }
   }, [isOpen]);
   
+  // Handle global mouseup/touchend to prevent stuck isSeeking state
+  useEffect(() => {
+    if (!isSeeking) return;
+    const handleGlobalRelease = () => {
+      setIsSeeking(false);
+    };
+    window.addEventListener('mouseup', handleGlobalRelease);
+    window.addEventListener('touchend', handleGlobalRelease);
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalRelease);
+      window.removeEventListener('touchend', handleGlobalRelease);
+    };
+  }, [isSeeking]);
+  
   const playerRef = useRef<any>(null);
 
   const togglePlay = () => setIsPlaying(!isPlaying);
-  const toggleMute = () => setIsMuted(!isMuted);
+  const toggleMute = () => {
+    if (isMuted && volume === 0) {
+      setVolume(0.5);
+    }
+    setIsMuted(!isMuted);
+  };
   
   const handleRestart = () => {
     if (playerRef.current) {
-      playerRef.current.currentTime = 0;
+      if (typeof playerRef.current.seekTo === 'function') {
+        playerRef.current.seekTo(0);
+      } else if ('currentTime' in playerRef.current) {
+        playerRef.current.currentTime = 0;
+      }
     }
+    setPlayed(0);
     if (!isPlaying) setIsPlaying(true);
   };
 
@@ -71,6 +95,7 @@ export const MusicPlayer = () => {
         playerRef.current.currentTime = fraction * duration;
       }
     }
+    setIsSeeking(false);
   };
 
   const formatTime = (seconds: number) => {
@@ -109,18 +134,23 @@ export const MusicPlayer = () => {
         width="0"
         height="0"
         onReady={() => setReady(true)}
-        onDurationChange={(e: any) => {
-          if (e.target && e.target.duration) {
-            setDuration(e.target.duration);
+        onLoadedMetadata={(e: React.SyntheticEvent<HTMLVideoElement>) => {
+          const d = e.currentTarget.duration;
+          if (d && !isNaN(d) && d > 0) {
+            setDuration(d);
           }
         }}
-        onTimeUpdate={(e: any) => {
-          if (e.target && e.target.currentTime) {
-            const current = e.target.currentTime;
-            const currentDuration = e.target.duration || duration;
-            if (currentDuration > 0 && !isSeeking) {
-              setPlayed(current / currentDuration);
-            }
+        onDurationChange={(e: React.SyntheticEvent<HTMLVideoElement>) => {
+          const d = e.currentTarget.duration;
+          if (d && !isNaN(d) && d > 0) {
+            setDuration(d);
+          }
+        }}
+        onTimeUpdate={(e: React.SyntheticEvent<HTMLVideoElement>) => {
+          const cur = e.currentTarget.currentTime;
+          const dur = e.currentTarget.duration || duration;
+          if (dur > 0 && typeof cur === 'number' && !isSeeking) {
+            setPlayed(cur / dur);
           }
         }}
         style={{ display: 'none' }}
