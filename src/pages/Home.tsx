@@ -6,6 +6,7 @@ import { PostMetadata } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import { PostCard } from '../components/PostCard';
 import { fetchPosts } from '../api';
+import { usePageSEO } from '../hooks/usePageSEO';
 
 const POSTS_PER_PAGE = 6;
 
@@ -29,28 +30,40 @@ export const Home = () => {
       });
   }, []);
 
-  useEffect(() => {
-    const title = 'Viking Algeria | YouTube Channel Notes';
-    const description = 'Personal notes and resources for the Viking Algeria YouTube channel.';
-    
-    document.title = title;
-    
-    const updateMeta = (name: string, content: string, attr: string = 'name') => {
-      let el = document.querySelector(`meta[${attr}="${name}"]`);
-      if (!el) {
-        el = document.createElement('meta');
-        el.setAttribute(attr, name);
-        document.head.appendChild(el);
-      }
-      el.setAttribute('content', content);
-    };
+  const seoTitle = debouncedSearchQuery
+    ? `Search: "${debouncedSearchQuery}" | Viking Algeria`
+    : 'Viking Algeria | Exploration, Tech, and Visual Stories';
+  const seoDescription = debouncedSearchQuery
+    ? `Search results for "${debouncedSearchQuery}" across Viking Algeria soundtrack notes and video archives.`
+    : 'Personal notes, soundtrack timestamps, anime resources, and visual stories for the Viking Algeria YouTube channel.';
 
-    updateMeta('description', description);
-    updateMeta('og:title', title, 'property');
-    updateMeta('og:description', description, 'property');
-    updateMeta('twitter:title', title, 'property');
-    updateMeta('twitter:description', description, 'property');
-  }, []);
+  usePageSEO({
+    title: seoTitle,
+    description: seoDescription,
+    keywords: [
+      'Viking Algeria',
+      'anime music',
+      'soundtrack notes',
+      'AMV tracklist',
+      'anime timestamps',
+      'gaming songs',
+      'YouTube notes',
+      ...(debouncedSearchQuery ? [debouncedSearchQuery] : [])
+    ],
+    canonicalUrl: typeof window !== 'undefined' ? `${window.location.origin}/` : 'https://vikingalgeria.com/',
+    schema: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: 'Viking Algeria Notes Archive',
+      description: seoDescription,
+      url: 'https://vikingalgeria.com/',
+      publisher: {
+        '@type': 'Organization',
+        name: 'Viking Algeria',
+        url: 'https://vikingalgeria.com/'
+      }
+    }
+  });
 
   // Reset to first page when searching
   useEffect(() => {

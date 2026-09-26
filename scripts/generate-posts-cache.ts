@@ -227,6 +227,25 @@ async function generate() {
 
   fs.writeFileSync(path.resolve(__dirname, "../public/posts.json"), JSON.stringify(posts, null, 2));
   console.log("Successfully generated public/posts.json");
+
+  // Generate XML Sitemap for search engines
+  const siteUrl = "https://vikingalgeria.com";
+  const today = new Date().toISOString().split('T')[0];
+  const sitemapUrls = [
+    `  <url>\n    <loc>${siteUrl}/</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>`,
+    ...posts.map(p => 
+      `  <url>\n    <loc>${siteUrl}/post/${encodeURIComponent(p.id)}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`
+    )
+  ];
+
+  const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapUrls.join('\n')}\n</urlset>\n`;
+  fs.writeFileSync(path.resolve(__dirname, "../public/sitemap.xml"), sitemapContent);
+  console.log(`Successfully generated public/sitemap.xml with ${posts.length + 1} URLs`);
+
+  // Generate robots.txt
+  const robotsContent = `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`;
+  fs.writeFileSync(path.resolve(__dirname, "../public/robots.txt"), robotsContent);
+  console.log("Successfully generated public/robots.txt");
 }
 
 generate().catch(console.error);

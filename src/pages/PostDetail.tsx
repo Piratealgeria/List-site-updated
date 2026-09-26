@@ -11,6 +11,7 @@ import { VideoEmbed, CopyableListItem, FormattedLine, CodeBlock } from '../compo
 import { CopyHint } from '../components/CopyHint';
 import { fetchPosts, fetchPostContent } from '../api';
 import { sanitizeHtml, copyToClipboard } from '../utils';
+import { usePageSEO } from '../hooks/usePageSEO';
 
 export const PostDetail = () => {
   const { id } = useParams();
@@ -70,15 +71,67 @@ export const PostDetail = () => {
   const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
   const nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
 
-  useEffect(() => {
-    if (post) {
-      document.title = `${post.title} | Viking Algeria`;
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription) {
-        metaDescription.setAttribute('content', post.excerpt || `Read ${post.title} on Viking Algeria.`);
-      }
-    }
-  }, [post]);
+  const canonicalUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/post/${encodeURIComponent(id || '')}`
+    : `https://vikingalgeria.com/post/${encodeURIComponent(id || '')}`;
+
+  const postTitle = post ? `${post.title} | Viking Algeria` : 'Loading Post... | Viking Algeria';
+  const postDescription = post?.excerpt || (post ? `Soundtrack notes, anime sources, and tracklist timestamps for ${post.title} on Viking Algeria.` : 'Read personal notes and tracklists on Viking Algeria.');
+  const postImage = post?.thumbnail || 'https://picsum.photos/seed/viking/1200/630';
+
+  usePageSEO({
+    title: postTitle,
+    description: postDescription,
+    keywords: post ? [
+      post.title,
+      'Viking Algeria',
+      'anime notes',
+      'soundtrack list',
+      'tracklist',
+      'timestamps',
+      'AMV music',
+      ...(post.tags || [])
+    ] : ['Viking Algeria'],
+    canonicalUrl,
+    image: postImage,
+    type: 'article',
+    schema: post ? {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: post.title,
+      description: postDescription,
+      image: [postImage],
+      url: canonicalUrl,
+      mainEntityOfPage: {
+        '@type': 'WebPage',
+        '@id': canonicalUrl
+      },
+      author: {
+        '@type': 'Organization',
+        name: 'Viking Algeria',
+        url: 'https://vikingalgeria.com/'
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Viking Algeria',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://vikingalgeria.com/icon.png'
+        }
+      },
+      keywords: [post.title, ...(post.tags || [])].join(', '),
+      ...(post.videoUrl ? {
+        video: {
+          '@type': 'VideoObject',
+          name: post.title,
+          description: postDescription,
+          thumbnailUrl: [postImage],
+          contentUrl: post.videoUrl,
+          embedUrl: post.videoUrl
+        }
+      } : {})
+    } : undefined
+  });
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
